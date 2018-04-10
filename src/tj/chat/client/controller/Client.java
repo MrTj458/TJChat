@@ -8,6 +8,8 @@ import java.io.OutputStream;
 import java.net.Socket;
 import java.net.UnknownHostException;
 
+import tj.chat.client.view.ChatFrame;
+
 public class Client
 {
 	private String address;
@@ -21,23 +23,31 @@ public class Client
 	
 	private int ID;
 	
+	private ChatFrame frame;
+	
 	public Client( String name, String address, int port)
 	{
 		this.name = name;
 		this.address = address;
 		this.port = port;
+		
+		frame = new ChatFrame(this);
 	}
 	
 	public void start()
 	{
 		try
 		{
+			showMessage("Connecting to " + address + ":" + port);
 			socket = new Socket(address, port);
 			
 			inStream = socket.getInputStream();
 			outStream = socket.getOutputStream();
+			outStream.flush();
 			
-			sendMessage("n/" + name);
+			if(socket.isConnected()) showMessage("Connected!");
+			
+			sendMessage("/n/" + name);
 		}
 		catch (UnknownHostException e)
 		{
@@ -80,23 +90,27 @@ public class Client
 		try
 		{
 			outStream.write(message.getBytes());
+			outStream.flush();
+			showMessage("Sent message: " + message);
 		}
 		catch (IOException e)
-		{}
+		{
+			showMessage("Unable to send message!");
+		}
 	}
 	
 	private void processMessage(String message)
 	{
-		if(message.startsWith("/s/"))
+		if(message.startsWith("/s/check"))
 		{
-			if(message.contains("check"))
-			{
-				sendMessage(Integer.toString(ID));
-			}
+			showMessage("Sending reply");
+			sendMessage("/r/" + Integer.toString(ID));
 		}
-		else if(message.contains("id"))
+		else if(message.contains("/s/id"))
 		{
-			ID = Integer.parseInt(message.substring(6));
+			ID = Integer.parseInt(message.substring(5,7));
+			
+			showMessage("Received id " + ID);
 		}
 		else
 		{
@@ -106,6 +120,6 @@ public class Client
 	
 	private void showMessage(String message)
 	{
-		//TODO
+		frame.getPanel().addMessage(message);
 	}
 }

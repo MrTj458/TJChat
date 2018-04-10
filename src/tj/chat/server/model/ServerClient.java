@@ -30,8 +30,9 @@ public class ServerClient implements Runnable
 		
 		try
 		{
-			inStream = clientSocket.getInputStream();
-			outStream = clientSocket.getOutputStream();
+			inStream = this.clientSocket.getInputStream();
+			outStream = this.clientSocket.getOutputStream();
+			outStream.flush();
 		}
 		catch (IOException e)
 		{
@@ -76,19 +77,21 @@ public class ServerClient implements Runnable
 	private void processMessage(String message) throws IOException
 	{
 		//Check if incoming message is a command;
-		if(message.startsWith("/"))
+
+		if(message.startsWith("/quit"))
 		{
-			if(message.contains("quit"))
-			{
-				controller.disconnectClient(ID);
-				clientSocket.close();
-			}
+			controller.disconnectClient(ID);
+			clientSocket.close();
 		}
-		else if(message.startsWith("n/"))
+		else if(message.startsWith("/r/"))
+		{
+			controller.addresponse(Integer.parseInt(message.substring(3,5)));
+		}
+		else if(message.startsWith("/n/"))
 		{
 			this.name = message.substring(2);
 			controller.updateClientList();
-			controller.broadcastMessage(name, " Has Connected");
+			controller.broadcastMessage(name, " Has Connected.");
 		}
 		else
 		{
@@ -101,6 +104,7 @@ public class ServerClient implements Runnable
 		try
 		{
 			outStream.write(message.getBytes());
+			outStream.flush();
 		}
 		catch (IOException e)
 		{}
@@ -114,6 +118,11 @@ public class ServerClient implements Runnable
 	public int getAttempts()
 	{
 		return attempts;
+	}
+	
+	public void resetAttempts()
+	{
+		attempts = 0;
 	}
 	
 	public int getID()

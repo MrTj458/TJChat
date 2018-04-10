@@ -63,8 +63,8 @@ public class Server
 						showMessage("Client connected from: " + clientSocket.getInetAddress().getHostAddress() + ":" + Integer.toString(clientSocket.getPort()));
 						
 						ServerClient client = new ServerClient(clientSocket, UniqueIdentifier.getIdentifier(), "New User", thisServer);
-						sendToClient(client.getID(), "/s/id " + client.getID());
 						clients.add(client);
+						sendToClient(client.getID(), "/s/id" + client.getID());
 						updateClientList();
 						Thread t = new Thread(client);
 						t.start();
@@ -89,19 +89,23 @@ public class Server
 					try
 					{
 						serverBroadcast("/s/check");
-						Thread.sleep(2000);
+						Thread.sleep(5000);
 						for(int i = 0; i < clients.size(); i++)
 						{
 							if(!responses.contains(clients.get(i).getID()))
 							{
 								clients.get(i).addAttempt();
-								showMessage("User " + clients.get(i).getName() + "(" + clients.get(i).getID() + ") Not responding. Attempt: " + clients.get(i).getAttempts());
+								showMessage("User: " + clients.get(i).getName() + "(" + clients.get(i).getID() + ") Not responding. Attempt: " + clients.get(i).getAttempts());
 								
 								if(clients.get(i).getAttempts() > 4)
 								{
 									showMessage("User " + clients.get(i).getName() + "(" + clients.get(i).getID() + ") Lost connection");
 									disconnectClient(clients.get(i).getID());
 								}
+							}
+							else
+							{
+								clients.get(i).resetAttempts();
 							}
 						}
 						responses.clear();
@@ -165,7 +169,7 @@ public class Server
 		responses.add(id);
 	}
 	
-	private void showMessage(String message)
+	public void showMessage(String message)
 	{
 		uiFrame.getPanel().addMainMessage(message);
 	}
